@@ -15,7 +15,7 @@ class ZoneFileProvider(BaseProvider):
         'SRV', 'TXT'))
 
 
-    def __init__(self, id, directory, check_origin=True):
+    def __init__(self, id, directory):
         '''
         Arguments
         =========
@@ -31,7 +31,11 @@ class ZoneFileProvider(BaseProvider):
         super(ZoneFileProvider, self).__init__(id)
 
     def populate(self, zone, target=False, lenient=False):
-        self.log.warn("ZoneFileProvider only implements target, for source octodns.source.axfr.ZoneFileSource should be used.")
+        if target:
+            return False
+
+        raise NotImplementedError("ZoneFileProvider only implements the target part."+
+                " Use OctoDns' own ZoneFileSource to read from ZoneFiles.")
 
     def _apply(self,plan):
         '''
@@ -39,7 +43,7 @@ class ZoneFileProvider(BaseProvider):
         =========
         plan: octodns.provider.plan.Plan
         '''
-        # self.desired to dns.zone -> to file
+
         records = plan.desired.records
         zone = dns.zone.Zone(plan.desired.name)
 
