@@ -6,7 +6,7 @@ setup(
     version='0.1.0',
     author="Jonas Gunz",
     description="Custom sources for OctoDNS",
-    packages=['octodns-custom-providers'],
+    packages=setuptools.find_packages(),
     install_requires=[
         "octodns",
         "phpipam"
