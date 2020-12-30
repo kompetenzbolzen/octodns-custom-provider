@@ -3,10 +3,10 @@ import setuptools
 
 setup(
     name='octodns-custom-providers',
-    version='0.0.0-dev',
+    version='0.1.0',
     author="Jonas Gunz",
     description="Custom sources for OctoDNS",
-    packages=setuptools.find_packages(),
+    packages=['octodns-custom-providers'],
     install_requires=[
         "octodns",
         "phpipam"
