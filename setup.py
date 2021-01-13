@@ -5,6 +5,7 @@ setup(
     name='octodns-custom-providers',
     version='0.2.1',
     author="Jonas Gunz",
+    author_mail="himself@jonasgunz.de"
     description="Custom sources for OctoDNS",
     packages=setuptools.find_packages(),
     install_requires=[
@@ -16,7 +17,7 @@ setup(
     long_description_content_type="text/markdown",
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT",
+        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
 )
