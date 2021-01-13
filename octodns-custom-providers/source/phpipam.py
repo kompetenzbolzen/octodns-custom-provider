@@ -1,7 +1,7 @@
 #import octodns.zone.Zone
 import octodns.record
 import octodns.source.base
-import phpipam
+import phpipam_api
 import logging
 import re
 
@@ -31,7 +31,7 @@ class PhpipamSource(octodns.source.base.BaseSource):
         self._default_ttl = default_ttl
         self._tag = tag
         self._cidrs = cidrs
-        self._ipam = phpipam.PhpipamAPI( url, appid, user, token )
+        self._ipam = phpipam_api.PhpipamAPI( url, appid, user, token )
 
     def populate(self, zone, target=False, lenient=False):
         ipam = self._ipam

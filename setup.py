@@ -3,13 +3,13 @@ import setuptools
 
 setup(
     name='octodns-custom-providers',
-    version='0.2.0',
+    version='0.2.1',
     author="Jonas Gunz",
     description="Custom sources for OctoDNS",
     packages=setuptools.find_packages(),
     install_requires=[
         "octodns",
-        "phpipam"
+        "phpipam-api>=1.0.0"
     ],
     license='MIT',
     long_description=open('README.md').read(),
