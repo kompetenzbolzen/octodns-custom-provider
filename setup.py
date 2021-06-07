@@ -5,7 +5,7 @@ setup(
     name='octodns-custom-providers',
     version='0.2.1',
     author="Jonas Gunz",
-    author_mail="himself@jonasgunz.de"
+    author_mail="himself@jonasgunz.de",
     description="Custom sources for OctoDNS",
     packages=setuptools.find_packages(),
     install_requires=[
