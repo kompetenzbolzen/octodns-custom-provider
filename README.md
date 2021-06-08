@@ -14,6 +14,14 @@ providers:
   zonefile:
     class: octodns-custom-providers.provider.zonefile.ZoneFileProvider
     directory: zonefiles
+    soa:
+      mname: ns.example.com
+      rname: dns.example.com
+      serial: 123456
+      refresh: 7200
+      retry: 3600
+      expire: 1209600
+      minimum: 3600
 ```
 
 ## octodns-custom-providers.source.phpipam.PhpipamSource

@@ -1,7 +1,4 @@
-#from octodns.zone import Zone
 from octodns.provider.base import BaseProvider
-from octodns.provider.plan import Plan
-#from octodns.source.axfr import ZoneFileSource
 
 import logging
 
@@ -9,24 +6,57 @@ import dns.zone
 import dns.rdataclass
 import dns.rdatatype
 
+class RdataParameterException(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
+
+def _create_rdata( rdclass, rdtype, data ):
+    if isinstance(data,str):
+        return dns.rdata.from_text(rdclass, rdtype, data)
+
+    cls = dns.rdata.get_rdata_class(rdclass, rdtype)
+
+    for slot in cls.__slots__:
+        if not slot in data:
+            raise RdataParameterException('{} is missing'.format(slot))
+
+    return cls(rdclass, rdtype, **data)
+
 class ZoneFileProvider(BaseProvider):
-    SUPPORTS_GEO=False
+
+    SUPPORTS_GEO = False
     SUPPORTS = set(('A', 'AAAA', 'CAA', 'CNAME', 'MX', 'NS', 'PTR', 'SPF',
-        'SRV', 'TXT'))
+                    'SRV', 'TXT'))
 
+    '''
+    SOA dict
+    {
+        mname
+        rname
+        serial
+        refresh
+        retry
+        expire
+        ttl
+    }
+    '''
 
-    def __init__(self, id, directory):
+    def __init__(self, id, directory, soa, soa_ttl=3600, file_extension = ''):
         '''
         Arguments
         =========
         id: str
         directory: str
-        check_origin: bool
+        soa: dict
+        extension: str
         '''
         self.log = logging.getLogger('ZoneFileProvider[{}]'.format(id))
         self.log.debug('__init__: directory={}'.format(directory))
 
         self.directory = directory
+        self.file_extension = file_extension
+        self.soa = soa
+        self.soa_ttl = soa_ttl
 
         super(ZoneFileProvider, self).__init__(id)
 
@@ -34,36 +64,55 @@ class ZoneFileProvider(BaseProvider):
         if target:
             return False
 
-        raise NotImplementedError("ZoneFileProvider only implements the target part."+
-                " Use OctoDns' own ZoneFileSource to read from ZoneFiles.")
+        raise NotImplementedError(
+            "ZoneFileProvider only implements the target part." +
+            " Use OctoDns' own ZoneFileSource to read from ZoneFiles.")
 
-    def _apply(self,plan):
+
+    def _apply(self, plan):
         '''
         Arguments
         =========
         plan: octodns.provider.plan.Plan
         '''
 
-        records = plan.desired.records
         zone = dns.zone.Zone(plan.desired.name)
+
+        soaset = dns.rdataset.Rdataset(
+            dns.rdataclass.IN, dns.rdatatype.SOA)
+        soaset.add(_create_rdata(
+            dns.rdataclass.IN,
+            dns.rdatatype.SOA,
+            self.soa), self.soa_ttl)
+        zone.replace_rdataset('@',soaset)
 
         for record in plan.desired.records:
             data = record.data
             name = record.name
 
-            rdset = dns.rdataset.Rdataset(dns.rdataclass.IN, dns.rdatatype.from_text(record._type))
+            rdset = dns.rdataset.Rdataset(
+                dns.rdataclass.IN, dns.rdatatype.from_text(record._type))
 
             if 'value' in data:
-                rdset.add(dns.rdata.from_text(dns.rdataclass.IN,
-                    dns.rdatatype.from_text(record._type), data['value']), ttl=int(data['ttl'] ))
+                rdset.add(
+                    _create_rdata(
+                        dns.rdataclass.IN,
+                        dns.rdatatype.from_text(record._type),
+                        data['value']),
+                    ttl=int(data['ttl']))
             elif 'values' in data:
                 for value in data['values']:
-                    rdset.add(dns.rdata.from_text(dns.rdataclass.IN,
-                        dns.rdatatype.from_text(record._type), value), ttl=int(data['ttl'] ))
+                    rdset.add(
+                        _create_rdata(
+                            dns.rdataclass.IN,
+                            dns.rdatatype.from_text(record._type),
+                            value),
+                        ttl=int(data['ttl']))
             else:
-                self.log.warning("neither value nor values found in {}".format(name))
+                self.log.warning(
+                    "neither value nor values found in {}".format(name))
                 continue
 
             zone.replace_rdataset(name, rdset)
 
-        zone.to_file( self.directory + '/' + plan.desired.name)
+        zone.to_file(self.directory + '/' + plan.desired.name + self.file_extension)

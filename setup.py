@@ -10,7 +10,8 @@ setup(
     packages=setuptools.find_packages(),
     install_requires=[
         "octodns",
-        "phpipam-api>=1.0.0"
+        "phpipam-api>=1.0.0",
+        "dnspython>=2.1.0"
     ],
     license='MIT',
     long_description=open('README.md').read(),
