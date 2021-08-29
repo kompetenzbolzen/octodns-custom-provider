@@ -3,7 +3,7 @@ import setuptools
 
 setup(
     name='octodns-custom-providers',
-    version='0.3.0',
+    version='0.3.1',
     author="Jonas Gunz",
     author_mail="himself@jonasgunz.de",
     description="Custom sources for OctoDNS",

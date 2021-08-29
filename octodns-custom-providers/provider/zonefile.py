@@ -6,6 +6,8 @@ import dns.zone
 import dns.rdataclass
 import dns.rdatatype
 
+import os
+
 class RdataParameterException(Exception):
     def __init__(self, msg):
         super().__init__(msg)
@@ -57,6 +59,12 @@ class ZoneFileProvider(BaseProvider):
         self.file_extension = file_extension
         self.soa = soa
         self.soa_ttl = soa_ttl
+
+        # OctoDNS does not recursively check dicts for 'env/' keyword
+        # TODO Error handling
+        serial = self.soa['serial']
+        if type(serial) == str and serial.startswith('env/'):
+            self.soa['serial'] = int(os.environ[ serial.split('/',1)[1] ])
 
         super(ZoneFileProvider, self).__init__(id)
 

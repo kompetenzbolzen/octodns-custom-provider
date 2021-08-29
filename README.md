@@ -7,6 +7,8 @@ Custom [OctoDNS](https://github.com/octodns/octodns) Providers/Sources I wrote f
 OctoDNS only provides a ZoneFile source. This Provider can create a BIND compatible ZoneFile.
 It can NOT be used as a source. Use the builtin OctoDNS ZoneFile source instead.
 
+soa.serial can be used with `env/` keyword to use environment variable as Serialnumber
+
 Example
 
 ```
