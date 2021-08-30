@@ -29,6 +29,7 @@ providers:
 ## octodns-custom-providers.source.phpipam.PhpipamSource
 
 This source allows to use [PHPipam](https://github.com/phpipam/phpipam) as a source for IP address mappings.
+Reverse-Mappings are created, when used to create a `in-addr.arpa` zone or forced with `reverse: True`
 
 Requires: [python-phpipam](https://github.com/kompetenzbolzen/python-phpipam)
 
