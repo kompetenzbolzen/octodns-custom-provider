@@ -39,8 +39,9 @@ class PhpipamSource(octodns.source.base.BaseSource):
         zone_parts = zone_name.strip('.').split('.')[0:-2][::-1]
         for i in range(len(zone_parts)):
             if not zone_parts[i] == reverse_parts[3-i]:
-                return False
-        return True
+                return []
+
+        return reverse_parts[0:4-len(zone_parts)]
 
     def _populate_reverse(self, zone, selected_addresses):
         for hostname in selected_addresses:
@@ -59,12 +60,11 @@ class PhpipamSource(octodns.source.base.BaseSource):
             for ip in ips:
                 # TODO de-uglify
                 parts = ip.split('.')[::-1]
-                if not PhpipamSource._ip_in_arpa_zone(zone.name, parts):
+                relative_parts = PhpipamSource._ip_in_arpa_zone(zone.name, parts)
+                if len(relative_parts) == 0:
                     continue
 
-                parts.append('in-addr')
-                parts.append('arpa')
-                arpa_name = '.'.join(parts).replace("zone.name","")
+                arpa_name = '.'.join(relative_parts).strip('.')
 
                 new_record = octodns.record.Record.new( zone, arpa_name, data)
                 zone.add_record( new_record )
