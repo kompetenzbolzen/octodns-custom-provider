@@ -43,7 +43,7 @@ class ZoneFileProvider(BaseProvider):
     }
     '''
 
-    def __init__(self, id, directory, soa, soa_ttl=3600, file_extension = ''):
+    def __init__(self, id, directory, soa, soa_ttl=3600, file_extension = '', support_root_ns = True):
         '''
         Arguments
         =========
@@ -59,6 +59,7 @@ class ZoneFileProvider(BaseProvider):
         self.file_extension = file_extension
         self.soa = soa
         self.soa_ttl = soa_ttl
+        self.support_root_ns = support_root_ns
 
         # OctoDNS does not recursively check dicts for 'env/' keyword
         # TODO Error handling
@@ -67,6 +68,10 @@ class ZoneFileProvider(BaseProvider):
             self.soa['serial'] = int(os.environ[ serial.split('/',1)[1] ])
 
         super(ZoneFileProvider, self).__init__(id)
+
+    @property
+    def SUPPORTS_ROOT_NS(self):
+        return self.support_root_ns
 
     def populate(self, zone, target=False, lenient=False):
         if target:
