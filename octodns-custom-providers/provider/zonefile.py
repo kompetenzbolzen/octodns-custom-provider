@@ -14,9 +14,24 @@ class RdataParameterException(Exception):
 
 def _create_rdata( rdclass, rdtype, data ):
     if isinstance(data,str):
+        if rdtype == 16: # TXT-Record
+            return dns.rdata.from_text(rdclass, rdtype, '"'+data+'"')
         return dns.rdata.from_text(rdclass, rdtype, data)
 
     cls = dns.rdata.get_rdata_class(rdclass, rdtype)
+
+    if rdtype == 257: # CAA-Record
+        data['tag'] = bytes(data['tag'], 'utf-8')
+        data['value'] = bytes(data['value'], 'utf-8')
+
+    if rdtype == 44: # SSHFP-Record
+        data['fp_type'] = data.pop('fingerprint_type')
+        data['fingerprint'] = bytes.fromhex(data['fingerprint'])
+
+    if rdtype == 52: # TLSA-Record
+        data['usage'] = data.pop('certificate_usage')
+        data['mtype'] = data.pop('matching_type')
+        data['cert'] = bytes.fromhex(data.pop('certificate_association_data'))
 
     for slot in cls.__slots__:
         if not slot in data:
@@ -25,10 +40,10 @@ def _create_rdata( rdclass, rdtype, data ):
     return cls(rdclass, rdtype, **data)
 
 class ZoneFileProvider(BaseProvider):
-
+    SUPPORTS_MULTIVALUE_PTR = True
     SUPPORTS_GEO = False
     SUPPORTS = set(('A', 'AAAA', 'CAA', 'CNAME', 'MX', 'NS', 'PTR', 'SPF',
-                    'SRV', 'TXT'))
+                    'SRV', 'SSHFP', 'TLSA', 'TXT'))
 
     '''
     SOA dict
