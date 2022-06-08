@@ -25,6 +25,7 @@ def _create_rdata( rdclass, rdtype, data ):
         data['value'] = bytes(data['value'], 'utf-8')
 
     if rdtype == 44: # SSHFP-Record
+        data['algorithm'] = data.pop('algorithm')
         data['fp_type'] = data.pop('fingerprint_type')
         data['fingerprint'] = bytes.fromhex(data['fingerprint'])
 
@@ -32,6 +33,13 @@ def _create_rdata( rdclass, rdtype, data ):
         data['usage'] = data.pop('certificate_usage')
         data['mtype'] = data.pop('matching_type')
         data['cert'] = bytes.fromhex(data.pop('certificate_association_data'))
+
+    if rdtype == 35: # NAPTR-Record
+        data['order'] = data.pop('order')
+        data['preference'] = data.pop('preference')
+        data['flags'] = data.pop('flags')
+        data['regexp'] = data.pop('regexp')
+        data['replacement'] = data.pop('replacement')
 
     for slot in cls.__slots__:
         if not slot in data:
@@ -42,8 +50,8 @@ def _create_rdata( rdclass, rdtype, data ):
 class ZoneFileProvider(BaseProvider):
     SUPPORTS_MULTIVALUE_PTR = True
     SUPPORTS_GEO = False
-    SUPPORTS = set(('A', 'AAAA', 'CAA', 'CNAME', 'MX', 'NS', 'PTR', 'SPF',
-                    'SRV', 'SSHFP', 'TLSA', 'TXT'))
+    SUPPORTS = set(('A', 'AAAA', 'CAA', 'CNAME', 'MX', 'NAPTR', 'NS', 'PTR',
+                    'SPF', 'SRV', 'SSHFP', 'TLSA', 'TXT'))
 
     '''
     SOA dict
