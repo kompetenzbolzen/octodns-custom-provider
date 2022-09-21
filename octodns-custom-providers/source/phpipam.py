@@ -45,6 +45,10 @@ class PhpipamSource(octodns.source.base.BaseSource):
 
     def _populate_reverse(self, zone, selected_addresses):
         for hostname in selected_addresses:
+            if type(hostname) is not str:
+                # If an IP has no hostname set
+                continue
+
             data={
                 'type':'PTR',
                 'ttl':self._default_ttl,
@@ -70,7 +74,12 @@ class PhpipamSource(octodns.source.base.BaseSource):
                 zone.add_record( new_record )
 
     def _populate_forward(self, zone, selected_addresses):
+        print(selected_addresses)
         for _selected_address in selected_addresses:
+            if type(_selected_address) is not str:
+                # If an IP has no hostname set
+                continue
+
             if not _selected_address.endswith(zone.name.strip('.')):
                 continue
 
