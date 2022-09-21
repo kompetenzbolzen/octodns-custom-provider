@@ -74,7 +74,6 @@ class PhpipamSource(octodns.source.base.BaseSource):
                 zone.add_record( new_record )
 
     def _populate_forward(self, zone, selected_addresses):
-        print(selected_addresses)
         for _selected_address in selected_addresses:
             if type(_selected_address) is not str:
                 # If an IP has no hostname set
