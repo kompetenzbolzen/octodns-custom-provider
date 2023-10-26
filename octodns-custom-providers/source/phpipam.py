@@ -3,7 +3,7 @@ import octodns.record
 import octodns.source.base
 import phpipam_api
 import logging
-import re
+import ipaddress
 
 class PhpipamSource(octodns.source.base.BaseSource):
     SUPPORTS_GEO=False
@@ -34,15 +34,6 @@ class PhpipamSource(octodns.source.base.BaseSource):
         self._ipam = phpipam_api.PhpipamAPI( url, appid, user, token )
         self._reverse = reverse
 
-    @staticmethod
-    def _ip_in_arpa_zone(zone_name, reverse_parts):
-        zone_parts = zone_name.strip('.').split('.')[0:-2][::-1]
-        for i in range(len(zone_parts)):
-            if not zone_parts[i] == reverse_parts[3-i]:
-                return []
-
-        return reverse_parts[0:4-len(zone_parts)]
-
     def _populate_reverse(self, zone, selected_addresses):
         for hostname in selected_addresses:
             if type(hostname) is not str:
@@ -62,13 +53,12 @@ class PhpipamSource(octodns.source.base.BaseSource):
                 ips.append(selected_addresses[hostname])
 
             for ip in ips:
-                # TODO de-uglify
-                parts = ip.split('.')[::-1]
-                relative_parts = PhpipamSource._ip_in_arpa_zone(zone.name, parts)
-                if len(relative_parts) == 0:
+                addr = ipaddress.ip_address(ip)
+
+                if not addr.reverse_pointer.endswith(zone.name.strip('.')):
                     continue
 
-                arpa_name = '.'.join(relative_parts).strip('.')
+                arpa_name = addr.reverse_pointer.removesuffix(zone.name.strip('.')).strip('.')
 
                 new_record = octodns.record.Record.new( zone, arpa_name, data)
                 zone.add_record( new_record )
@@ -82,16 +72,34 @@ class PhpipamSource(octodns.source.base.BaseSource):
             if not _selected_address.endswith(zone.name.strip('.')):
                 continue
 
-            hostname = re.sub( '\.' + zone.name.strip('.').replace('.', '\.') + '$', '', _selected_address)
+            hostname = _selected_address.removesuffix(zone.name.strip('.')).strip('.')
 
-            data={
-                'type':'A',
-                'ttl':self._default_ttl,
-                'values':selected_addresses[_selected_address]
-            }
+            values4 = []
+            values6 = []
 
-            new_record = octodns.record.Record.new( zone, hostname, data)
-            zone.add_record( new_record )
+            for address in selected_addresses[_selected_address]:
+                if ipaddress.ip_address(address).version == 4:
+                    values4.append(address)
+                else:
+                    values6.append(address)
+
+            if len(values4) > 0:
+                data={
+                    'type':'A',
+                    'ttl':self._default_ttl,
+                    'values':values4
+                }
+
+                new_record = octodns.record.Record.new( zone, hostname, data)
+                zone.add_record( new_record )
+            if len(values6) > 0:
+                data={
+                    'type':'AAAA',
+                    'ttl':self._default_ttl,
+                    'values':values6
+                }
+                new_record = octodns.record.Record.new( zone, hostname, data)
+                zone.add_record( new_record )
 
 
     def populate(self, zone, target=False, lenient=False):
@@ -101,7 +109,7 @@ class PhpipamSource(octodns.source.base.BaseSource):
         domain = zone.name
         reverse = self._reverse
 
-        if domain.endswith('in-addr.arpa.'):
+        if domain.endswith('in-addr.arpa.') or domain.endswith('ip6.arpa.'):
             reverse = True
 
         tags = ipam.addresses.getTags()
